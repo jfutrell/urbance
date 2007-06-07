@@ -1,26 +1,108 @@
+breed [ links link ]
+breed [ nodes node ]
+
+turtles-own [ explored? ]
+globals
+[
+  component-size          ;; number of nodes explored so far in the current component
+  giant-component-size    ;; number of nodes in the giant component
+  giant-start-node        ;; node from where we started exploring the giant component
+]
+
 to setup
   ca
-  crt 100
   ask patches with [pzcor = 0 ] [set pcolor green + (random-float 2 ) - 1]
-  ask turtles [ set zcor 1
-                set xcor random max-pxcor
-                set ycor random max-pycor
-                set color red]
+  set-default-shape turtles "circle"
+  make-nodes
+  find-all-components
+  color-giant-component
+end
+
+to make-nodes
+  create-nodes num-nodes
+  [
+    setxy random-xcor random-ycor
+    set zcor 1
+  ]
 end
 
 to go
-  ask turtles
-    [ fd 1             ;; all turtles move forward one step
-      rt random 10     ;; ...and turn a random amount
-      lt random 10
-      draw-network 4 who ]
+  ;; we don't want the display to update while we're in the middle
+  ;; of updating stuff, so we use no-display/display to freeze/unfreeze
+  while [ (2 * count links ) <= fractional * ( (count nodes) * (count nodes - 1) ) ]
+  [
+  no-display
+  add-edge
+  find-all-components
+  color-giant-component
+  ask links [ set color color-of __end1 ]  ;; recolor all edges
+  ]
+  display
+  user-message "Road Network generation complete"
 end
 
-to draw-network [num-sides plength]
-  pd
-  repeat num-sides
-    [ fd plength
-      rt ( random 90 )]
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Network Exploration ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; to find all the connected components in the network, their sizes and starting nodes
+to find-all-components
+  ask nodes [ set explored? false ]
+  ;; keep exploring till all nodes get explored
+  loop
+  [
+    ;; pick a node that has not yet been explored
+    let start one-of nodes with [ not explored? ]
+    if start = nobody [ stop ]
+    ;; reset the number of nodes found to 0
+    ;; this variable is updated each time we explore an
+    ;; unexplored node.
+    set component-size 0
+    ;; at this stage, we recolor everything to light gray
+    ask start [ explore (gray + 2) ]
+    ;; the explore procedure updates the component-size variable.
+    ;; so check, have we found a new giant component?
+    if component-size > giant-component-size
+    [
+      set giant-component-size component-size
+      set giant-start-node start
+    ]
+  ]
+end
+
+;; Finds all nodes reachable from this node (and recolors them)
+to explore [new-color]  ;; node procedure
+  if explored? [ stop ]
+  set explored? true
+  set component-size component-size + 1
+  ;; color the node
+  set color new-color
+  ask __link-neighbors [ explore new-color ]
+end
+
+;; color the giant component red
+to color-giant-component
+  ask nodes [ set explored? false ]
+  ask giant-start-node [ explore red ]
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;
+;;; Edge Operations ;;;
+;;;;;;;;;;;;;;;;;;;;;;;
+
+;; pick a random missing edge and create it
+to add-edge
+  let node1 one-of nodes
+  let node2 one-of nodes
+  ask node1 [
+    ifelse __link-neighbor? node2 or node1 = node2
+    ;; if there's already an edge there, then go back
+    ;; and pick new nodes
+    [ add-edge ]
+    ;; else, go ahead and make it
+    [ __create-link-with node2 ]
+  ]
+    
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -82,6 +164,34 @@ NIL
 T
 OBSERVER
 T
+NIL
+
+SLIDER
+29
+104
+201
+137
+num-nodes
+num-nodes
+10
+100
+81
+1
+1
+NIL
+
+SLIDER
+30
+155
+202
+188
+fractional
+fractional
+0.04
+0.3
+0.1
+0.01
+1
 NIL
 
 @#$#@#$#@
