@@ -2,7 +2,7 @@
 
 = Introduction =
 
-After NodeGeneration, NetworkGeneration, SubGridGeneration comes the generation of Building blocks which define the urban morphology. An urban space is mainly identified by it's skyline as well as form of buildings and their relative layout.
+After NodeGeneration, NetworkGeneration, SubgridGeneration comes the generation of Building blocks which define the urban morphology. An urban space is mainly identified by it's skyline as well as form of buildings and their relative layout.
 
 Hence the purpose of Building block generation would involve the complete stages from the template after the aforementioned stages till the generation of the urban morphology.
 This would involve two major steps in terms of evolutionary growth
