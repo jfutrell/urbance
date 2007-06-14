@@ -1,11 +1,11 @@
-breed [ links link ]
+breed [ roadlinks link ]
 breed [ nodes node ]
 
 turtles-own [ explored? ]
 globals
 [
-  component-size          ;; number of nodes explored so far in the current component
-  giant-component-size    ;; number of nodes in the giant component
+  component-size          ;; number of roadnodes explored so far in the current component
+  giant-component-size    ;; number of roadnodes in the giant component
   giant-start-node        ;; node from where we started exploring the giant component
 ]
 
@@ -29,13 +29,13 @@ end
 to go
   ;; we don't want the display to update while we're in the middle
   ;; of updating stuff, so we use no-display/display to freeze/unfreeze
-  while [ (2 * count links ) <= fractional * ( (count nodes) * (count nodes - 1) ) ]
+  while [ (2 * count roadlinks ) <= connectedness * ( (count nodes) * (count nodes - 1) ) ]
   [
   no-display
   add-edge
   find-all-components
   color-giant-component
-  ask links [ set color color-of __end1 ]  ;; recolor all edges
+  ask roadlinks [ set color color-of __end1 ]  ;; recolor all edges
   ]
   display
   user-message "Road Network generation complete"
@@ -45,16 +45,16 @@ end
 ;;; Network Exploration ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; to find all the connected components in the network, their sizes and starting nodes
+;; to find all the connected components in the network, their sizes and starting roadnodes
 to find-all-components
   ask nodes [ set explored? false ]
-  ;; keep exploring till all nodes get explored
+  ;; keep exploring till all roadnodes get explored
   loop
   [
     ;; pick a node that has not yet been explored
     let start one-of nodes with [ not explored? ]
     if start = nobody [ stop ]
-    ;; reset the number of nodes found to 0
+    ;; reset the number of roadnodes found to 0
     ;; this variable is updated each time we explore an
     ;; unexplored node.
     set component-size 0
@@ -70,7 +70,7 @@ to find-all-components
   ]
 end
 
-;; Finds all nodes reachable from this node (and recolors them)
+;; Finds all roadnodes reachable from this node (and recolors them)
 to explore [new-color]  ;; node procedure
   if explored? [ stop ]
   set explored? true
@@ -86,20 +86,12 @@ to color-giant-component
   ask giant-start-node [ explore red ]
 end
 
-;;;;;;;;;;;;;;;;;;;;;;;
-;;; Edge Operations ;;;
-;;;;;;;;;;;;;;;;;;;;;;;
-
-;; pick a random missing edge and create it
 to add-edge
   let node1 one-of nodes
   let node2 one-of nodes
   ask node1 [
     ifelse __link-neighbor? node2 or node1 = node2
-    ;; if there's already an edge there, then go back
-    ;; and pick new nodes
     [ add-edge ]
-    ;; else, go ahead and make it
     [ __create-link-with node2 ]
   ]
     
@@ -175,7 +167,7 @@ num-nodes
 num-nodes
 10
 100
-81
+36
 1
 1
 NIL
@@ -183,13 +175,13 @@ NIL
 SLIDER
 30
 155
-202
+217
 188
-fractional
-fractional
+connectedness
+connectedness
 0.04
 0.3
-0.1
+0.3
 0.01
 1
 NIL
