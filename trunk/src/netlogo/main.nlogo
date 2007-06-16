@@ -7,17 +7,58 @@ globals
   component-size          ;; number of roadnodes explored so far in the current component
   giant-component-size    ;; number of roadnodes in the giant component
   giant-start-node        ;; node from where we started exploring the giant component
+  contour-data
 ]
 
 to setup
   ca
-  ask patches with [pzcor = 0 ] [set pcolor green + (random-float 2 ) - 1]
+  load-contour-data
   set-default-shape turtles "circle"
   make-nodes
   find-all-components
   color-giant-component
 end
 
+to load-contour-data
+  let file user-new-file
+
+  ifelse ( file != false )
+  [
+    set contour-data []
+    file-open file
+
+    while [ not file-at-end? ]
+      [ set contour-data sentence contour-data (list (list file-read file-read file-read)) ]
+
+    user-message "Loading template file specified"
+    file-close
+    no-display
+    foreach contour-data [ draw-contour first ? item 1 ? last ? ]
+    ask patches with [pzcor = 0 ] [set pcolor green + (random-float 2 ) - 1]
+    display
+    user-message "Contour loading complete!"
+  ]
+  [ user-message "No contour file specified. Loading plain terrain"
+    ask patches with [pzcor = 0 ] [set pcolor green + (random-float 2 ) - 1] ]
+end
+
+to draw-contour [cx cy cz]
+       if ( cz >= 1 and cz < 15 and cx < 97 and cy < 97 and cx > -97 and cy > -97)
+       [
+       let planstep  1
+       let zstep  1
+       set pcolor-of patch cx cy cz lime + (random-float 2 ) - 1
+       if (( pcolor-of patch (cx - planstep) cy (cz + zstep ))  = 0 ) [ draw-contour cx - planstep cy cz - zstep ]
+       if (( pcolor-of patch (cx - planstep) (cy - planstep) (cz + zstep)) = 0 ) [ draw-contour cx - planstep cy - planstep cz - zstep ]
+       if (( pcolor-of patch (cx - planstep) (cy + planstep) (cz + zstep) ) = 0 ) [ draw-contour cx - planstep cy + planstep cz - zstep ]
+       if (( pcolor-of patch cx (cy - planstep) (cz + zstep)) = 0 ) [ draw-contour cx cy - planstep cz - zstep ]
+       if (( pcolor-of patch cx (cy + planstep) (cz + zstep)) = 0 ) [ draw-contour cx cy + planstep cz - zstep ]
+       if (( pcolor-of patch (cx + planstep) (cy + planstep) (cz + zstep)) = 0 ) [ draw-contour cx + planstep cy + planstep cz - zstep ]
+       if (( pcolor-of patch (cx + planstep) cy (cz + zstep)) = 0 ) [ draw-contour cx + planstep cy cz - zstep ]
+       if (( pcolor-of patch (cx + planstep) (cy - planstep) (cz + zstep)) = 0 ) [ draw-contour cx + planstep cy - planstep cz - zstep ]     
+       ]
+end
+    
 to make-nodes
   create-nodes num-nodes
   [
@@ -119,7 +160,7 @@ GRAPHICS-WINDOW
 -100
 100
 0
-10
+15
 1
 
 CC-WINDOW
