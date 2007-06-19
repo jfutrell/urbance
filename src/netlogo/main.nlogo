@@ -63,7 +63,7 @@ to make-nodes
   create-nodes num-nodes
   [
     setxy random-xcor random-ycor
-    set zcor 1
+    set zcor 0
   ]
 end
 
@@ -79,7 +79,10 @@ to go
   ask roadlinks [ set color color-of __end1 ]  ;; recolor all edges
   ]
   display
-  user-message "Road Network generation complete"
+  drawroadpatch
+  user-message "Road Network Generation complete"
+  randheighter
+  user-message "Random Height Building Generation complete"
 end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -137,12 +140,87 @@ to add-edge
   ]
     
 end
+
+;; Drawing the Road
+
+to drawroadpatch
+
+  ask roadlinks [ 
+      repeat size / 2 [ fd 1
+                        set pcolor black
+                        lt 90
+                        fd 1
+                        set pcolor black
+                        bk 1
+                        rt 90
+                      ]
+      bk size / 2
+      repeat size / 2 [ bk 1
+                        set pcolor black
+                        lt 90
+                        fd 1
+                        set pcolor black
+                        bk 1
+                        rt 90
+                      ]
+      jump size / 2
+      ]   
+end   
+;; Bezier Exploits
+
+
+to-report bezierblend [ k mu n]
+  let nn n
+  let kn k
+  let nkn n - k
+  let blend 1.0
+  
+  while [ nn >= 1]
+  [
+    set blend  blend * nn
+    set nn  nn - 1
+    if ( kn > 1) 
+      [ set blend  blend / kn
+        set kn  kn - 1
+      ]
+    if ( nkn > 1)
+      [ set blend  blend / nkn
+        set nkn nkn - 1
+      ]
+  ]
+  if ( k > 0) [ set blend  blend * ( mu ^ k )]
+  if ( n - k > 0 ) [ set blend  blend * ( ( 1 - mu ) ^ ( n - k)) ]
+  report blend
+end
+
+to bezierpoint
+  foreach contour-data 
+    [ 
+      draw-contour first ? item 1 ? last ?
+    ]
+end
+
+
+;; random height playing
+
+to randheighter
+
+  ask patches with [ pzcor = 0 ]
+              [ if (pcolor != black and random 3 = 1) [
+                let tempvar 1
+                repeat random 14 [ 
+                             ask patch pxcor pycor ( pzcor + tempvar ) [ set pcolor blue ]
+                             set tempvar tempvar + 1
+                             ]
+                ]
+              ]
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 303
 10
-514
-242
+379
+107
 100
 100
 1.0
@@ -165,9 +243,9 @@ GRAPHICS-WINDOW
 
 CC-WINDOW
 5
-256
-523
-351
+202
+388
+297
 Command Center
 0
 
