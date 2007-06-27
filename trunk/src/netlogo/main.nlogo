@@ -148,18 +148,30 @@ to drawroadpatch
   ask roadlinks [ 
       repeat size / 2 [ fd 1
                         set pcolor black
+                        let x xcor
+                        let y ycor
+                        ask patches with [ pxcor = x and pycor = y and pcolor != black ] [ set pcolor black]
                         lt 90
                         fd 1
                         set pcolor black
+                        set x xcor
+                        set y ycor
+                        ask patches with [ pxcor = x and pycor = y and pcolor != black ] [ set pcolor black]
                         bk 1
                         rt 90
                       ]
       bk size / 2
       repeat size / 2 [ bk 1
                         set pcolor black
+                        let x xcor
+                        let y ycor
+                        ask patches with [ pxcor = x and pycor = y and pcolor != black ] [ set pcolor black]
                         lt 90
                         fd 1
                         set pcolor black
+                        set x xcor
+                        set y ycor
+                        ask patches with [ pxcor = x and pycor = y and pcolor != black ] [ set pcolor black]
                         bk 1
                         rt 90
                       ]
@@ -219,8 +231,8 @@ end
 GRAPHICS-WINDOW
 303
 10
-379
-107
+514
+242
 100
 100
 1.0
@@ -243,9 +255,9 @@ GRAPHICS-WINDOW
 
 CC-WINDOW
 5
-202
-388
-297
+256
+523
+351
 Command Center
 0
 
