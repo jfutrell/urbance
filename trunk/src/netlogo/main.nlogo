@@ -1,5 +1,6 @@
 breed [ roadlinks link ]
 breed [ nodes node ]
+breed [ buildingblocks buildingblock]
 
 turtles-own [ explored? ]
 globals
@@ -148,30 +149,30 @@ to drawroadpatch
   ask roadlinks [ 
       repeat size / 2 [ fd 1
                         set pcolor black
-                        let x xcor
-                        let y ycor
-                        ask patches with [ pxcor = x and pycor = y and pcolor != black ] [ set pcolor black]
+                        ;let x xcor
+                        ;let y ycor
+                        ;ask patches with [ pxcor = x and pycor = y and pcolor != black ] [ set pcolor black]
                         lt 90
                         fd 1
                         set pcolor black
-                        set x xcor
-                        set y ycor
-                        ask patches with [ pxcor = x and pycor = y and pcolor != black ] [ set pcolor black]
+                        ;set x xcor
+                        ;set y ycor
+                        ;ask patches with [ pxcor = x and pycor = y and pcolor != black ] [ set pcolor black]
                         bk 1
                         rt 90
                       ]
       bk size / 2
       repeat size / 2 [ bk 1
                         set pcolor black
-                        let x xcor
-                        let y ycor
-                        ask patches with [ pxcor = x and pycor = y and pcolor != black ] [ set pcolor black]
+                        ;let x xcor
+                        ;let y ycor
+                        ;ask patches with [ pxcor = x and pycor = y and pcolor != black ] [ set pcolor black]
                         lt 90
                         fd 1
                         set pcolor black
-                        set x xcor
-                        set y ycor
-                        ask patches with [ pxcor = x and pycor = y and pcolor != black ] [ set pcolor black]
+                        ;set x xcor
+                        ;set y ycor
+                        ;ask patches with [ pxcor = x and pycor = y and pcolor != black ] [ set pcolor black]
                         bk 1
                         rt 90
                       ]
@@ -227,6 +228,11 @@ to randheighter
                 ]
               ]
 end
+
+to make-buildingblocks
+  foreach patch with [pzcor = 0 and pcolor != black ]
+  [ create-buildingblocks 1 [ setxy pxcor pycor
+                              set zcor 0 ]
 @#$#@#$#@
 GRAPHICS-WINDOW
 303
