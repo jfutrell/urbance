@@ -9,10 +9,12 @@ globals
   giant-component-size    ;; number of roadnodes in the giant component
   giant-start-node        ;; node from where we started exploring the giant component
   contour-data
+  buildable-data
 ]
 
 to setup
   ca
+  setxyz 150 150 100
   load-contour-data
   set-default-shape turtles "circle"
   make-nodes
@@ -44,7 +46,7 @@ to load-contour-data
 end
 
 to draw-contour [cx cy cz]
-       if ( cz >= 1 and cz < 15 and cx < 97 and cy < 97 and cx > -97 and cy > -97)
+       if ( cz >= 1 and cz < max-pycor and cx < max-pxcor - 2 and cy < max-pycor - 2 and cx > min-pxcor + 2 and cy > min-pycor + 2 )
        [
        let planstep  1
        let zstep  1
@@ -218,30 +220,83 @@ end
 
 to randheighter
 
-  ask patches with [ pzcor = 0 ]
-              [ if (pcolor != black and random 3 = 1) [
-                let tempvar 1
-                repeat random 14 [ 
-                             ask patch pxcor pycor ( pzcor + tempvar ) [ set pcolor blue ]
-                             set tempvar tempvar + 1
-                             ]
-                ]
-              ]
+  ;ask patches with [ pzcor = 0 ]
+  ;            [ if (pcolor != black and random 3 = 1) [
+  ;              let tempvar 1
+  ;              repeat random 14 [ 
+  ;                           ask patch pxcor pycor ( pzcor + tempvar ) [ set pcolor blue ]
+  ;                           set tempvar tempvar + 1
+  ;                           ]
+  ;              ]
+  ;           ]
+  make-buildingblocks
+  grow-buildingblocks
 end
 
 to make-buildingblocks
-  foreach patch with [pzcor = 0 and pcolor != black ]
-  [ create-buildingblocks 1 [ setxy pxcor pycor
-                              set zcor 0 ]
+
+  repeat 300 [ 
+              let inputx 0
+              let inputy 0
+              let makeblocks 0
+              ask patch-at random-xcor random-ycor 0 [
+              if ( pcolor != black) [
+                                    set inputx  pxcor
+                                    set inputy  pycor
+                                    set makeblocks 1
+                                    ]
+              ]
+            if ( makeblocks = 1 )[ make-block inputx inputy ]
+            ]
+end
+
+to make-block [inputx inputy]
+  create-buildingblocks 1 [ setxy inputx inputy
+                            set zcor 1
+                            set shape "square"
+                            set size 1
+                            set color blue
+                            set pcolor red]
+end
+
+to grow-buildingblocks
+  ask buildingblocks [ set pcolor red]
+  ask patches  with [ pzcor = 1 and pcolor = red ]
+  [ paint-agents neighbors ]
+  ;foreach ( patches with [ pcolor = blue ])
+  ;  [ make-block pxcor pycor ]
+    
+end
+
+to grow-till-limit
+  loop [
+  let beforegrowth  count patches with [ pzcor = 1 and pcolor = red ]
+  grow-buildingblocks
+  if ( beforegrowth = count patches with [ pzcor = 1 and pcolor = red ] )
+    [
+      user-message "Maximum growth reached"
+      stop ]
+  ]
+end
+to paint-agents [agents]
+  ask agents with [pzcor = 1 and pcolor-of  patch-at 0  0 -1 != black ][ set pcolor red ]
+end
+
+to clear-buildingblocks
+  ask patches with [ pzcor = 1 and pcolor = red ] [ set pcolor black ]
+end
+
+to grow-percentage
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
-303
-10
-514
-242
+91
+247
+310
+487
 100
 100
-1.0
+1.04
 1
 10
 1
@@ -261,17 +316,17 @@ GRAPHICS-WINDOW
 
 CC-WINDOW
 5
-256
-523
-351
+501
+442
+596
 Command Center
 0
 
 BUTTON
-26
-35
-90
-68
+14
+20
+78
+53
 Setup
 setup
 NIL
@@ -282,10 +337,10 @@ T
 NIL
 
 BUTTON
-147
-37
-210
-70
+116
+21
+179
+54
 Go
 go
 NIL
@@ -296,10 +351,10 @@ T
 NIL
 
 SLIDER
-29
-104
-201
-137
+14
+69
+186
+102
 num-nodes
 num-nodes
 10
@@ -310,10 +365,10 @@ num-nodes
 NIL
 
 SLIDER
-30
-155
-217
-188
+13
+119
+200
+152
 connectedness
 connectedness
 0.04
@@ -321,6 +376,76 @@ connectedness
 0.3
 0.01
 1
+NIL
+
+BUTTON
+214
+22
+341
+55
+Grow blocks once
+grow-buildingblocks
+NIL
+1
+T
+OBSERVER
+T
+NIL
+
+BUTTON
+343
+72
+433
+105
+Clear blocks
+clear-buildingblocks
+NIL
+1
+T
+OBSERVER
+T
+NIL
+
+BUTTON
+214
+71
+328
+104
+Grow maximum
+grow-till-limit
+NIL
+1
+T
+OBSERVER
+T
+NIL
+
+SLIDER
+213
+119
+385
+152
+growth-percentage
+growth-percentage
+0
+100
+50
+1
+1
+NIL
+
+BUTTON
+214
+165
+370
+198
+Growth by percentage
+grow-percentage
+NIL
+1
+T
+OBSERVER
+T
 NIL
 
 @#$#@#$#@
@@ -663,4 +788,20 @@ NetLogo 3D Preview 4
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="SimpleTest" repetitions="1" runMetricsEveryTick="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>count turtles</metric>
+    <enumeratedValueSet variable="connectedness">
+      <value value="0.3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-nodes">
+      <value value="36"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="growth-percentage">
+      <value value="50"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
