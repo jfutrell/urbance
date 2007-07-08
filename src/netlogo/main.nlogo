@@ -10,17 +10,44 @@ globals
   giant-start-node        ;; node from where we started exploring the giant component
   contour-data
   buildable-data
+  heightlevel
 ]
 
+;; Set up as the name implies sets up the scenario
+;; It calls mainly the load-countour-data function which sets up the contour and paints
+;; the apporpriate patches green
+;; make-nodes , find-all-components and color-giant-component functions are related to
+;; the road network generation
 to setup
   ca
   setxyz 150 150 100
+  set heightlevel 1
   load-contour-data
   set-default-shape turtles "circle"
   make-nodes
   find-all-components
   color-giant-component
 end
+
+;; Clear is a simple function which is similar to the setup function but unlike it does
+;; not load a contour. This is helpful as a button during the development process
+;; and also considering the fact that various observations could be made on a plain
+;; terrain as well
+
+to clear
+  ca
+  setxyz 150 150 100
+  set heightlevel 1
+  set-default-shape turtles "circle"
+  make-nodes
+  find-all-components
+  color-giant-component
+  ask patches with [pzcor = 0 ] [set pcolor green + (random-float 2 ) - 1]
+end
+
+;; load-contour-data uses the standard netlogo primitives for loading a file and reading
+;; the data. As of now contour data is stored as [ x y z] which basically gives
+;; the height of various locations (x,y)
 
 to load-contour-data
   let file user-new-file
@@ -45,6 +72,8 @@ to load-contour-data
     ask patches with [pzcor = 0 ] [set pcolor green + (random-float 2 ) - 1] ]
 end
 
+;; eventually to be replaced with the bezier curves and surfaces  this is a primitive and simple spiraling contour drawing algorithm
+
 to draw-contour [cx cy cz]
        if ( cz >= 1 and cz < max-pycor and cx < max-pxcor - 2 and cy < max-pycor - 2 and cx > min-pxcor + 2 and cy > min-pycor + 2 )
        [
@@ -61,7 +90,10 @@ to draw-contour [cx cy cz]
        if (( pcolor-of patch (cx + planstep) (cy - planstep) (cz + zstep)) = 0 ) [ draw-contour cx + planstep cy - planstep cz - zstep ]     
        ]
 end
-    
+
+
+;; nodes in this program context stands for the transportation network
+   
 to make-nodes
   create-nodes num-nodes
   [
@@ -69,6 +101,9 @@ to make-nodes
     set zcor 0
   ]
 end
+
+;; typical go function
+;; some functions to be changed : randheighter
 
 to go
   ;; we don't want the display to update while we're in the middle
@@ -84,8 +119,8 @@ to go
   display
   drawroadpatch
   user-message "Road Network Generation complete"
-  randheighter
-  user-message "Random Height Building Generation complete"
+  ;randheighter
+  ;user-message "Random Height Building Generation complete"
 end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -145,6 +180,8 @@ to add-edge
 end
 
 ;; Drawing the Road
+;; identifies the link elements / agents and traverses along them marking the region black as of now. This leaves us
+;; with the buildable green patch
 
 to drawroadpatch
 
@@ -181,7 +218,10 @@ to drawroadpatch
       jump size / 2
       ]   
 end   
+
 ;; Bezier Exploits
+;; Still to be finished and optimized are the bezierblend functions which would
+;; eventually take the place of the countour drawing function
 
 
 to-report bezierblend [ k mu n]
@@ -217,6 +257,7 @@ end
 
 
 ;; random height playing
+;; temporary testing function for the vertical growth
 
 to randheighter
 
@@ -232,6 +273,9 @@ to randheighter
   make-buildingblocks
   grow-buildingblocks
 end
+
+;; generates random building blocks into the growable patch left after the roadpatches
+;; have been drawn Further modifications: Non random positioning. Affinity to nodes
 
 to make-buildingblocks
 
@@ -259,6 +303,7 @@ to make-block [inputx inputy]
                             set pcolor red]
 end
 
+;; Growth of the building blocks in the horizontal plane
 to grow-buildingblocks
   ask buildingblocks [ set pcolor red]
   ask patches  with [ pzcor = 1 and pcolor = red ]
@@ -267,6 +312,8 @@ to grow-buildingblocks
   ;  [ make-block pxcor pycor ]
     
 end
+
+;; Grows till all the green patch which is simply connected is filled
 
 to grow-till-limit
   loop [
@@ -278,15 +325,44 @@ to grow-till-limit
       stop ]
   ]
 end
+
 to paint-agents [agents]
   ask agents with [pzcor = 1 and pcolor-of  patch-at 0  0 -1 != black ][ set pcolor red ]
 end
+
+;; clears all the patches but this does not remove the block agents as such
 
 to clear-buildingblocks
   ask patches with [ pzcor = 1 and pcolor = red ] [ set pcolor black ]
 end
 
+;; Grow-percentage function: Allowing the user to specify the amount / extent of growth
+;; in the horizontal plane
 to grow-percentage
+end
+
+;; Growth in the vertical plane : Eventual form would be of artificial life-sque style
+
+to raise-blocks
+  ask patches with [ pcolor = red and pzcor = heightlevel ] 
+          [ 
+          let rn 0;
+          set rn count neighbors with [pcolor = red ]
+          if ( rn > 4 )
+              [ ifelse ( rn = 5 )
+                        [ if( pzcor != 1 ) [ ask patch-at 0 0 -1 [set pcolor black]
+                          set pcolor black ]
+                        ]
+                        [ ifelse ( rn = 6 )
+                              [ ask patch-at 0 0 1  [set pcolor red ] ]
+                              [ ifelse ( rn = 7 )
+                                   [ ask patch-at 0 0 1 [set pcolor red] ]
+                                   []
+                              ]
+                        ]
+              ]
+          ]
+  set heightlevel heightlevel + 1
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -317,7 +393,7 @@ GRAPHICS-WINDOW
 CC-WINDOW
 5
 501
-442
+607
 596
 Command Center
 0
@@ -337,10 +413,10 @@ T
 NIL
 
 BUTTON
-116
-21
-179
-54
+170
+20
+233
+53
 Go
 go
 NIL
@@ -379,9 +455,9 @@ connectedness
 NIL
 
 BUTTON
-214
+265
 22
-341
+393
 55
 Grow blocks once
 grow-buildingblocks
@@ -393,9 +469,9 @@ T
 NIL
 
 BUTTON
-343
+395
 72
-433
+485
 105
 Clear blocks
 clear-buildingblocks
@@ -407,9 +483,9 @@ T
 NIL
 
 BUTTON
-214
+266
 71
-328
+380
 104
 Grow maximum
 grow-till-limit
@@ -421,9 +497,9 @@ T
 NIL
 
 SLIDER
-213
+265
 119
-385
+437
 152
 growth-percentage
 growth-percentage
@@ -435,12 +511,40 @@ growth-percentage
 NIL
 
 BUTTON
-214
+266
 165
-370
+422
 198
 Growth by percentage
 grow-percentage
+NIL
+1
+T
+OBSERVER
+T
+NIL
+
+BUTTON
+500
+25
+598
+58
+Raise blocks
+raise-blocks
+NIL
+1
+T
+OBSERVER
+T
+NIL
+
+BUTTON
+91
+21
+154
+54
+Clear
+clear
 NIL
 1
 T
